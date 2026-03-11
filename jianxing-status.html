@@ -137,7 +137,7 @@
         }
 
         /* ============================================================
-           Day/Night Toggle
+           Day/Night Toggle (pinned to container bottom)
            ============================================================ */
         .jx-toggle {
             position: absolute;
@@ -162,7 +162,7 @@
         .jx-toggle:active { transform: translateX(-50%) rotate(60deg) scale(0.95); }
 
         /* ============================================================
-           Character Panels (flex items, no absolute positioning)
+           Character Panels (flex items)
            ============================================================ */
         .jx-glyph {
             position: relative;
@@ -178,7 +178,6 @@
             flex-shrink: 0;
         }
 
-        /* ---- Big character ---- */
         .jx-big {
             font-family: 'Zhi Mang Xing', cursive;
             font-weight: 400;
@@ -197,7 +196,6 @@
             position: absolute;
         }
 
-        /* ---- Content text ---- */
         .jx-content {
             opacity: 0;
             transform: scale(0.9);
@@ -320,7 +318,7 @@
             <div class="jx-big">偈</div>
             <div class="jx-content">
                 <div class="jx-label">佛 偈</div>
-                <div class="jx-text-gatha">$1</div>
+                <div class="jx-text-gatha" id="jx-gatha"></div>
             </div>
         </div>
 
@@ -328,7 +326,7 @@
         <div class="jx-tree-wrap">
             <div class="jx-tree-glow"></div>
             <div class="jx-mono-layer" id="jx-mono">
-                <div class="jx-mono-text">$3</div>
+                <div class="jx-mono-text" id="jx-monologue"></div>
             </div>
             <img class="jx-tree-img" id="jx-tree" src="https://raw.githubusercontent.com/moonquakemo/moonoonon/main/bodhi-tree.png" alt="菩提树" onclick="this.classList.toggle('jx-faded');document.getElementById('jx-mono').classList.toggle('jx-visible')">
         </div>
@@ -338,7 +336,7 @@
             <div class="jx-big">机</div>
             <div class="jx-content">
                 <div class="jx-label">机 锋</div>
-                <div class="jx-text-jifeng">$2</div>
+                <div class="jx-text-jifeng" id="jx-jifeng"></div>
             </div>
         </div>
 
@@ -351,19 +349,19 @@
     <script>
     (function() {
         var STORAGE_KEY = 'jx-theme';
+
+        // ---- Inject data from regex params ----
+        var data = window.TH_REMOTE_PARAMS || {};
+        document.getElementById('jx-gatha').textContent = data.gatha || '';
+        document.getElementById('jx-jifeng').textContent = data.jifeng || '';
+        document.getElementById('jx-monologue').textContent = data.monologue || '';
+
+        // ---- Restore saved theme ----
         var bars = document.querySelectorAll('.jx-status-bar');
         var root = bars[bars.length - 1];
         if (!root) return;
 
-        // ---- Restore saved theme ----
         var saved = localStorage.getItem(STORAGE_KEY);
-        if (saved === 'night') {
-            root.classList.add('jx-night');
-            var icon = root.querySelector('[data-role="toggle"] span');
-            if (icon) icon.textContent = '☽';
-        }
-
-        // ---- Sync ALL bars on the page to the saved theme ----
         bars.forEach(function(bar) {
             if (saved === 'night') {
                 bar.classList.add('jx-night');
@@ -384,7 +382,6 @@
                 var isNight = !root.classList.contains('jx-night');
                 localStorage.setItem(STORAGE_KEY, isNight ? 'night' : 'day');
 
-                // Apply to ALL status bars on page
                 document.querySelectorAll('.jx-status-bar').forEach(function(bar) {
                     bar.classList.toggle('jx-night', isNight);
                     var ic = bar.querySelector('[data-role="toggle"] span');
