@@ -1,0 +1,459 @@
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700;900&family=Zhi+Mang+Xing&display=swap');
+
+        :root {
+            --bg-dark: #221e1d;
+            --bg-deep: #161311;
+            --text-gold: #cba063;
+            --text-light: #e6dfd6;
+            --text-dim: #9b9185;
+            --border-color: #5c4e43;
+            --shadow-glow: rgba(203, 160, 99, 0.15);
+            --gold-bright: #e8c87a;
+            --gold-mid: #cba063;
+            --gold-deep: #a07840;
+        }
+
+        .mud-buddha-container * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .mud-buddha-container {
+            position: relative;
+            width: 100%;
+            min-height: 480px;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-deep) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: 'Noto Serif SC', serif;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.6);
+        }
+
+        /* ============================================================
+           Particle Canvas
+           ============================================================ */
+        #incense-particles {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ============================================================
+           Content Wrapper (above particles)
+           ============================================================ */
+        .mb-content-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        /* ============================================================
+           Header
+           ============================================================ */
+        .mb-header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .mb-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-gold);
+            letter-spacing: 0.2em;
+            text-shadow: 0 2px 10px var(--shadow-glow);
+            margin-bottom: 8px;
+        }
+
+        .mb-author {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+        }
+
+        .mb-divider {
+            width: 60px;
+            height: 2px;
+            background-color: var(--text-gold);
+            margin: 0 auto 16px;
+            position: relative;
+            opacity: 0.7;
+        }
+        .mb-divider::before, .mb-divider::after {
+            content: "◆";
+            position: absolute;
+            top: -7px;
+            font-size: 0.8rem;
+            color: var(--text-gold);
+        }
+        .mb-divider::before { left: -15px; }
+        .mb-divider::after { right: -15px; }
+
+        .mb-quote {
+            font-size: 1rem;
+            font-weight: 300;
+            color: var(--text-light);
+            font-style: italic;
+            opacity: 0.85;
+            line-height: 1.6;
+        }
+
+        /* ============================================================
+           Tree + Titles Composite
+           ============================================================ */
+        .mb-tree-stage {
+            position: relative;
+            width: 360px;
+            height: 360px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Gold foil title grid — sits BEHIND the tree (z-index: 1) */
+        .mb-item-grid {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        .mb-ritual-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            text-align: center;
+        }
+
+        /* 法器图标样式 */
+        .mb-icon {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            margin-bottom: 12px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            opacity: 0.7;
+        }
+
+        /* 文字隐藏状态 */
+        .mb-route-text {
+            font-family: 'Zhi Mang Xing', cursive;
+            font-weight: 400;
+            font-size: 1.8rem;
+            letter-spacing: 0.2em;
+            /* Gold foil effect */
+            background: linear-gradient(
+                135deg,
+                var(--gold-deep) 0%,
+                var(--gold-bright) 30%,
+                var(--gold-mid) 50%,
+                var(--gold-bright) 70%,
+                var(--gold-deep) 100%
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 1px 3px rgba(203, 160, 99, 0.4));
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            
+            /* 初始状态：透明且不可点击 */
+            opacity: 0;
+            pointer-events: none;
+            position: absolute; /* 防止占位影响排版 */
+        }
+
+        /* Hover 状态：图标轻微点亮 */
+        .mb-ritual-item:hover .mb-icon {
+            opacity: 1;
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 12px rgba(203, 160, 99, 0.5));
+        }
+
+        /* 激活状态 (点击后) - 法器统一往上浮动一点点 */
+        .mb-ritual-item.revealed .mb-icon {
+            opacity: 1;
+            transform: translateY(-25px) scale(1.3);
+            filter: drop-shadow(0 0 15px rgba(232, 200, 122, 0.7));
+        }
+
+        /* 针对上方两个选项（钟、莲花）：文字在图标正下方，紧贴法器 */
+        .mb-item-tl .mb-route-text,
+        .mb-item-tr .mb-route-text {
+            top: 45px; /* 在法器图标起飞后的脚底位置 */
+            transform: translateY(-15px) scale(0.8); /* 初始缩小靠上隐藏 */
+        }
+        .mb-item-tl.revealed .mb-route-text,
+        .mb-item-tr.revealed .mb-route-text {
+            opacity: 1;
+            transform: translateY(0) scale(1); /* 展开时恰好在发光法器正下方 */
+        }
+
+        /* 针对下方两个选项（钵、念珠）：文字在图标正上方 */
+        .mb-item-bl .mb-route-text,
+        .mb-item-br .mb-route-text {
+            bottom: 95px; /* 在法器图标起飞后的头顶位置 */
+            transform: translateY(15px) scale(0.8); /* 初始缩小靠下隐藏 */
+        }
+        .mb-item-bl.revealed .mb-route-text,
+        .mb-item-br.revealed .mb-route-text {
+            opacity: 1;
+            transform: translateY(0) scale(1); /* 展开时稳稳坐在发光法器正上方 */
+        }
+
+        /* 各个位置微调让排版不死板 */
+        .mb-item-tl { align-items: flex-start; justify-content: flex-start; }
+        .mb-item-tr { align-items: flex-end; justify-content: flex-start; }
+        .mb-item-bl { align-items: flex-start; justify-content: flex-end; }
+        .mb-item-br { align-items: flex-end; justify-content: flex-end; }
+
+        /* Bodhi Tree — sits IN FRONT of the titles (z-index: 2) */
+        .mb-tree-img {
+            position: relative;
+            z-index: 2;
+            width: 280px;
+            height: 280px;
+            object-fit: contain;
+            /* Invert black silhouette to light on dark bg, add subtle gold glow */
+            filter: invert(1)
+                    drop-shadow(0 0 15px rgba(203, 160, 99, 0.25))
+                    drop-shadow(0 0 4px rgba(203, 160, 99, 0.15));
+            opacity: 0.4;
+            pointer-events: none; /* clicks pass through to titles behind */
+            transition: opacity 0.4s ease;
+        }
+
+        /* ============================================================
+           Error Message
+           ============================================================ */
+        #mb-error-msg {
+            display: none;
+            text-align: center;
+            color: #d9534f;
+            font-size: 0.85rem;
+            padding: 12px 16px;
+            margin-top: 15px;
+            background: rgba(217, 83, 79, 0.1);
+            border-radius: 4px;
+            border: 1px dashed #d9534f;
+            max-width: 500px;
+        }
+
+        /* ============================================================
+           Responsive
+           ============================================================ */
+        @media (max-width: 500px) {
+            .mb-tree-stage { width: 300px; height: 300px; }
+            .mb-tree-img { width: 220px; height: 220px; }
+            .mb-route-text { font-size: 1.5rem; }
+            .mb-icon { width: 40px; height: 40px; }
+            .mb-title { font-size: 1.8rem; }
+        }
+</style>
+
+<div class="mud-buddha-container" id="mud-buddha-container">
+    <canvas id="incense-particles"></canvas>
+
+    <div class="mb-content-wrapper">
+        <header class="mb-header">
+            <h1 class="mb-title">泥菩萨</h1>
+            <p class="mb-author">作者: ramomov</p>
+            <div class="mb-divider"></div>
+            <p class="mb-quote">"泥做的人儿，再怎么金堆玉砌也过不了江。"</p>
+        </header>
+
+        <div class="mb-tree-stage">
+            <!-- Ritual Items grid behind tree -->
+            <div class="mb-item-grid">
+                <!-- Top Left: 钟鸣鼎食 (引磬/钟) -->
+                <div class="mb-ritual-item mb-item-tl" data-swipe="1">
+                    <!-- 此处图片作用为钟鸣鼎食线路的法器图标(引磬)，请将图片链接替换成您图床上的对应链接 -->
+                    <img src="YOUR_GITHUB_URL_FOR_BELL_ICON" class="mb-icon" alt="bell">
+                    <span class="mb-route-text">钟鸣鼎食</span>
+                </div>
+                <!-- Top Right: 金枝玉叶 (莲花) -->
+                <div class="mb-ritual-item mb-item-tr" data-swipe="2">
+                    <!-- 此处图片作用为金枝玉叶线路的法器图标(莲花)，请将图片链接替换成您图床上的对应链接 -->
+                    <img src="YOUR_GITHUB_URL_FOR_LOTUS_ICON" class="mb-icon" alt="lotus">
+                    <span class="mb-route-text">金枝玉叶</span>
+                </div>
+                <!-- Bottom Left: 膳和浮生 (钵) -->
+                <div class="mb-ritual-item mb-item-bl" data-swipe="3">
+                    <!-- 此处图片作用为膳和浮生线路的法器图标(钵)，请将图片链接替换成您图床上的对应链接 -->
+                    <img src="YOUR_GITHUB_URL_FOR_BOWL_ICON" class="mb-icon" alt="bowl">
+                    <span class="mb-route-text">膳和浮生</span>
+                </div>
+                <!-- Bottom Right: 异世浮萍 (念珠) -->
+                <div class="mb-ritual-item mb-item-br" data-swipe="4">
+                    <!-- 此处图片作用为异世浮萍线路的法器图标(念珠)，请将图片链接替换成您图床上的对应链接 -->
+                    <img src="YOUR_GITHUB_URL_FOR_BEADS_ICON" class="mb-icon" alt="beads">
+                    <span class="mb-route-text">异世浮萍</span>
+                </div>
+            </div>
+
+            <!-- Tree in front -->
+            <!-- 此处图片作用为背景菩提树，请将图片链接替换成您图床上的对应链接 -->
+            <img class="mb-tree-img" src="YOUR_GITHUB_URL_FOR_TREE_ICON" alt="菩提树">
+        </div>
+
+        <div id="mb-error-msg"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ================================
+    // 1. Incense Particle System
+    // ================================
+    // Delay init to ensure container has rendered dimensions
+    setTimeout(function() {
+        const canvas = document.getElementById('incense-particles');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('mud-buddha-container');
+        if (!container) return;
+
+        let particlesArray = [];
+        const numberOfParticles = 60;
+
+        function resizeCanvas() {
+            canvas.width = container.offsetWidth || container.clientWidth || 800;
+            canvas.height = container.offsetHeight || container.clientHeight || 480;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedY = Math.random() * 0.4 + 0.1;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.color = `rgba(203, 160, 99, ${Math.random() * 0.6 + 0.1})`;
+            }
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                if (this.y + this.size < 0) {
+                    this.y = canvas.height + this.size;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            if(!document.getElementById('incense-particles')) return; // Exit if DOM changed
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+    }, 100);
+
+    // ================================
+    // 1.5. Interaction Logic (Reveal -> Jump)
+    // ================================
+    function handleItemClick(element, swipeId) {
+        if (!element.classList.contains('revealed')) {
+            document.querySelectorAll('.mb-ritual-item.revealed').forEach(el => {
+                if(el !== element) el.classList.remove('revealed');
+            });
+            element.classList.add('revealed');
+        } else {
+            triggerOpening(swipeId);
+        }
+    }
+
+    // ================================
+    // 2. SillyTavern Swipe API
+    // ================================
+    async function triggerOpening(swipeId) {
+        const errorMsg = document.getElementById('mb-error-msg');
+        if (typeof getChatMessages !== 'function' || typeof setChatMessage !== 'function') {
+            if (errorMsg) {
+                errorMsg.style.display = 'block';
+                errorMsg.innerText = "切换失败：未检测到环境 API。这可能是在直接预览 HTML，或酒馆助手插件未启用。";
+            }
+            return;
+        }
+        try {
+            const messages = await getChatMessages("0", { include_swipe: true });
+            if (messages && messages.length > 0 && messages[0].swipes && messages[0].swipes[swipeId]) {
+                const targetContent = messages[0].swipes[swipeId];
+                await setChatMessage(targetContent, 0, {
+                    swipe_id: swipeId,
+                    refresh: 'display_and_render_current'
+                });
+            } else {
+                if(errorMsg) {
+                    errorMsg.style.display = 'block';
+                    errorMsg.innerHTML = `未检测到对应的分支索引 [${swipeId}]。<br>请新建空白分支并填入对应剧情后再尝试点击。`;
+                }
+            }
+        } catch (error) {
+            console.error('动态跳转开场白时出错:', error);
+            if (errorMsg) {
+                errorMsg.style.display = 'block';
+                errorMsg.innerText = `执行错误: ${error.message}`;
+            }
+        }
+    }
+
+    // Bind events safely within the closure
+    const container = document.getElementById('mud-buddha-container');
+    if (container) {
+        const rituals = container.querySelectorAll('.mb-ritual-item');
+        rituals.forEach(el => {
+            const swipeId = parseInt(el.getAttribute('data-swipe'), 10);
+            if (swipeId) {
+                el.addEventListener('click', () => handleItemClick(el, swipeId));
+            }
+        });
+    }
+})();
+</script>
+
